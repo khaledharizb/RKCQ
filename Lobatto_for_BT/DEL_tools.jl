@@ -2,11 +2,11 @@ function DiscreteEL(f, nodes, b, c, h, N)
 
     s = length(nodes)
 
-    function Basis(j, t)
+        function Basis(j, t)
         y = 1
         for i in 1:s
             if i != j
-                y = y * (t - nodes[i]) / (nodes[j] - nodes[i])
+                y *= (t - nodes[i]) / (nodes[j] - nodes[i])
             end
         end
         return y
@@ -16,15 +16,15 @@ function DiscreteEL(f, nodes, b, c, h, N)
         ForwardDiff.derivative(t -> Basis(j, t), t)
     end
 
-    lag  = stack(map(j -> Basis.(j, c),  1:s), dims=1)
+    lag = stack(map(j -> Basis.(j, c), 1:s), dims=1)
     dlag = stack(map(j -> dBasis.(j, c), 1:s), dims=1)
 
     function Q(q, i)
-        sum(map(k -> q[k] * lag[k, i], 1:s))
+        sum(k -> @views(q[:, k]) * lag[k, i], 1:s)
     end
 
     function Qdot(q, i)
-        sum(map(k -> q[k] * dlag[k, i], 1:s)) / h
+        sum(k -> @views(q[:, k]) * dlag[k, i], 1:s) / h
     end
 
     τ = (0:N) * h
